@@ -2,6 +2,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import './App.css';
 
+// Configure axios base URL for the hosted backend
+axios.defaults.baseURL = 'http://35.188.123.207:3002';
+
 function App() {
   const [isListening, setIsListening] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -98,7 +101,7 @@ function App() {
 
   const connectWebSocket = (sessionId) => {
     return new Promise((resolve, reject) => {
-      const ws = new WebSocket(`ws://localhost:3002/ws/${sessionId}`);
+      const ws = new WebSocket(`ws://35.188.123.207:3002/ws/${sessionId}`);
       
       ws.onopen = () => {
         console.log('WebSocket connected');
