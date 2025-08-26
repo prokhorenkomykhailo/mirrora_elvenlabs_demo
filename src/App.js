@@ -88,7 +88,7 @@ function App() {
         setTimeout(() => {
           recognitionRef.current.start();
           setIsListening(true);
-        }, 2000); // Wait for audio to finish
+        }, 3000); // Wait for audio to finish
         
       } catch (error) {
         console.error('Error initializing voice session:', error);
@@ -108,10 +108,11 @@ function App() {
         setIsConnected(true);
         websocketRef.current = ws;
         
-        // Send session start message
+        // Send session start message with context
         ws.send(JSON.stringify({
           type: 'start-session',
-          voiceId: '21m00Tcm4TlvDq8ikWAM'
+          voiceId: '21m00Tcm4TlvDq8ikWAM',
+          defaultContext: defaultContext
         }));
         
         resolve();
@@ -119,6 +120,7 @@ function App() {
       
       ws.onmessage = (event) => {
         const data = JSON.parse(event.data);
+        console.log('WebSocket message received:', data);
         
         if (data.type === 'ai-response') {
           const aiMessage = {
@@ -132,17 +134,25 @@ function App() {
           
           // Play the audio response
           if (data.audio) {
+            console.log('Playing audio response');
             playAudio(data.audio);
+          } else {
+            console.log('No audio in response');
           }
           
           // Restart listening after audio finishes
           setTimeout(() => {
             if (isConnected && sessionId) {
+              console.log('Restarting speech recognition');
               recognitionRef.current.start();
             }
-          }, 2000);
+          }, 3000); // Increased delay to ensure audio finishes
         } else if (data.type === 'error') {
           console.error('WebSocket error:', data.message);
+        } else if (data.type === 'session-started') {
+          console.log('Session started successfully');
+        } else if (data.type === 'connected') {
+          console.log('WebSocket connected successfully');
         }
       };
       
@@ -161,7 +171,12 @@ function App() {
   };
 
   const handleVoiceMessage = (text) => {
-    if (!text.trim() || !isConnected || !websocketRef.current) return;
+    if (!text.trim() || !isConnected || !websocketRef.current) {
+      console.log('Voice message blocked:', { text: text.trim(), isConnected, hasWebSocket: !!websocketRef.current });
+      return;
+    }
+    
+    console.log('Sending voice message:', text);
     
     // Add user message to conversation
     const userMessage = { type: 'user', text, timestamp: new Date() };
